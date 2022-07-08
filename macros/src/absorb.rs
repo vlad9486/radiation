@@ -26,9 +26,12 @@ pub fn derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
             0 => quote::quote! { #se::nom::combinator::success(ctor) },
             len => {
                 let mut p = quote::quote!();
+                let mut limit_next = quote::quote!(L);
                 for binding in variant.bindings() {
                     let ast = &binding.ast();
-                    let limit = extract_attr!(&ast.attrs, "limit").unwrap_or(quote::quote!(L));
+                    let limit =
+                        extract_attr!(&ast.attrs, "limit").unwrap_or_else(|| limit_next.clone());
+                    limit_next = quote::quote!(<#limit as #se::Limit>::Next);
                     let as_str = find_attr(&ast.attrs, "as_str").is_some();
                     let custom_absorb = extract_attr!(&ast.attrs, "custom_absorb");
 
@@ -74,7 +77,7 @@ pub fn derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
                 L: #se::Limit,
             {
                 let original_input = <&[u8]>::clone(&input);
-                let (input, tag) = #tag_ty::absorb::<L>(input)?;
+                let (input, tag) = #tag_ty::absorb::<()>(input)?;
                 #body
                 {
                     let kind = #se::ParseErrorKind::unknown_tag(tag, stringify!(#ident));

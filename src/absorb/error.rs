@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 use core::fmt;
-use alloc::{string::{String, ToString}, boxed::Box, vec::Vec};
+use alloc::{
+    string::{String, ToString},
+    boxed::Box,
+    vec::Vec,
+};
 
 use nom::{
     error::{ParseError as NomParseError, ErrorKind as NomErrorKind, FromExternalError},
@@ -14,7 +18,7 @@ use super::limit::LimitError;
 #[derive(Debug)]
 pub enum ParseErrorKind {
     Nom(NomErrorKind),
-    Limit(LimitError),
+    Limit(LimitError, &'static str),
     UnknownTag { tag: String, hint: &'static str },
     Custom(NomErrorKind, String),
 }
@@ -23,7 +27,7 @@ impl fmt::Display for ParseErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ParseErrorKind::Nom(err) => write!(f, "{err:?}"),
-            ParseErrorKind::Limit(err) => write!(f, "{err}"),
+            ParseErrorKind::Limit(err, hint) => write!(f, "{hint}, {err}"),
             ParseErrorKind::UnknownTag { tag, hint } => write!(f, "unknown tag: {tag}, {hint}"),
             ParseErrorKind::Custom(err, custom) => write!(f, "{err:?}, custom: {custom}"),
         }

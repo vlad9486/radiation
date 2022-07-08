@@ -84,3 +84,6 @@ decl_derive!([Absorb, attributes(custom_absorb, as_str, limit, tag)] => absorb::
 
 mod emit;
 decl_derive!([Emit, attributes(custom_emit, as_str, tag)] => emit::derive);
+
+mod limit;
+decl_derive!([Limit, attributes(limit)] => limit::derive);

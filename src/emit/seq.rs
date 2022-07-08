@@ -47,7 +47,7 @@ where
         let pos = buffer.pos();
         let mut buffer = self.0.emit(0usize.emit(buffer));
         let len = buffer.pos() - pos - 4;
-        buffer.write_at(pos, &len.to_be_bytes());
+        buffer.write_at(pos, &(len as u32).to_be_bytes());
         buffer
     }
 }
@@ -72,11 +72,12 @@ where
 {
     fn emit(&self, mut buffer: W) -> W {
         let pos = buffer.pos();
+        buffer = 0usize.emit(buffer);
         for v in self {
             buffer = v.emit(buffer);
         }
         let len = buffer.pos() - pos - 4;
-        buffer.write_at(pos, &len.to_be_bytes());
+        buffer.write_at(pos, &(len as u32).to_be_bytes());
         buffer
     }
 }

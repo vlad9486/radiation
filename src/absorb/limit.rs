@@ -3,29 +3,39 @@
 
 use core::fmt;
 
-#[derive(Debug)]
 pub struct LimitError {
-    description: &'static str,
     minimum: usize,
     maximum: usize,
     actual: usize,
 }
 
-impl fmt::Display for LimitError {
+impl fmt::Debug for LimitError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let LimitError { description, minimum, maximum, actual } = self;
+        let LimitError {
+            minimum,
+            maximum,
+            actual,
+        } = self;
         if *actual > *maximum {
-            write!(f, "{description} falls outside the allowed maximum {actual} > {maximum}")
+            write!(f, "falls outside the allowed maximum, {actual} > {maximum}")
         } else if *actual < *minimum {
-            write!(f, "{description} falls below the allowed minimum {actual} < {minimum}")
+            write!(f, "falls below the allowed minimum, {actual} < {minimum}")
         } else {
             Ok(())
         }
     }
 }
 
+impl fmt::Display for LimitError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&self, f)
+    }
+}
+
 pub trait Limit {
     type Inner: Limit;
+
+    type Next: Limit;
 
     const LOWER: usize;
 
@@ -38,7 +48,6 @@ pub trait Limit {
             Ok(size)
         } else {
             Err(LimitError {
-                description: Self::DESCRIPTION,
                 minimum: Self::LOWER,
                 maximum: Self::UPPER,
                 actual: size,
@@ -49,6 +58,8 @@ pub trait Limit {
 
 impl Limit for () {
     type Inner = ();
+
+    type Next = ();
 
     const LOWER: usize = 0;
 
@@ -61,13 +72,16 @@ impl Limit for () {
     }
 }
 
-pub struct LimitDescriptor<L, const LOWER: usize, const UPPER: usize>(L);
+pub struct LimitDescriptor<L, N, const LOWER: usize, const UPPER: usize>(L, N);
 
-impl<L, const LOWER: usize, const UPPER: usize> Limit for LimitDescriptor<L, LOWER, UPPER>
+impl<L, N, const LOWER: usize, const UPPER: usize> Limit for LimitDescriptor<L, N, LOWER, UPPER>
 where
     L: Limit,
+    N: Limit,
 {
     type Inner = L;
+
+    type Next = N;
 
     const LOWER: usize = LOWER;
 

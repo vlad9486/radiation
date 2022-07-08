@@ -14,7 +14,7 @@ impl RadiationBuffer for Vec<u8> {
     }
 
     fn write_at(&mut self, pos: usize, data: &[u8]) {
-        self[pos..data.len()].clone_from_slice(data);
+        self[pos..(pos + data.len())].clone_from_slice(data);
     }
 }
 

@@ -12,7 +12,7 @@ extern crate alloc;
 extern crate self as radiation;
 
 #[cfg(feature = "derive")]
-pub use radiation_macros::{Absorb, Emit};
+pub use radiation_macros::{Absorb, Emit, Limit};
 
 pub use nom;
 

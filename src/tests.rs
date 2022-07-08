@@ -1,7 +1,9 @@
 // Copyright 2022 Vladislav Melnik
 // SPDX-License-Identifier: MIT
 
-use super::{AbsorbExt, Absorb, ParseError, ParseErrorKind, Emit};
+use alloc::{boxed::Box, vec::Vec};
+
+use super::{AbsorbExt, Absorb, ParseError, ParseErrorKind, Emit, DynSized, Limit};
 
 #[derive(Debug, PartialEq, Eq, Absorb, Emit)]
 struct SomeStruct {
@@ -84,4 +86,122 @@ fn trivial_enum() {
         }
     }
     panic!("unexpected error {}", err);
+}
+
+#[derive(Limit)]
+#[limit(upper = 36, inner = LimitOne)]
+struct LimitBig;
+
+#[derive(Limit)]
+#[limit(lower = 16, upper = 24, next = LimitTwo)]
+struct LimitOne;
+
+#[derive(Limit)]
+#[limit(lower = 0, upper = 8)]
+struct LimitTwo;
+
+#[derive(Absorb, Emit, Debug)]
+struct Limited {
+    small: u16,
+    // `DynSized` specifies that the bytes will be prefixed with length
+    // makes the size of the whole type known
+    #[limit(LimitBig)]
+    big: DynSized<LimitedInner>,
+}
+
+#[derive(Absorb, Emit, Debug)]
+struct LimitedInner {
+    // `Vec` is prefixed with length
+    one: Vec<u32>,
+    // Box<[T]> is not prefixed with length, don't need it,
+    // because the size of the whole type is known
+    two: Box<[u16]>,
+}
+
+#[test]
+fn test_limits_fail_0() {
+    let limited = Limited {
+        small: 321,
+        // this is 4 + 6 * 4 + 5 * 2 == 38 bytes long, which is over limit 36
+        big: DynSized(LimitedInner {
+            one: vec![0x12345; 6],
+            two: Box::new([0; 5]),
+        }),
+    };
+    let bytes = limited.emit(vec![]);
+    let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
+    if let nom::Err::Error(err) = &err {
+        if let ParseErrorKind::Limit(_, hint) = &err.kind {
+            if *hint == stringify!(LimitBig) {
+                return;
+            }
+        }
+    }
+    panic!("wrong error {err}");
+}
+
+#[test]
+fn test_limits_fail_1() {
+    let limited = Limited {
+        small: 321,
+        big: DynSized(LimitedInner {
+            // this is 7 * 4 == 28 bytes long, which is over limit 24
+            one: vec![0x12345; 7],
+            two: Box::new([0; 1]),
+        }),
+    };
+    let bytes = limited.emit(vec![]);
+    let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
+    if let nom::Err::Error(err) = &err {
+        if let ParseErrorKind::Limit(_, hint) = &err.kind {
+            if *hint == stringify!(LimitOne) {
+                return;
+            }
+        }
+    }
+    panic!("wrong error {err}");
+}
+
+#[test]
+fn test_limits_fail_2() {
+    let limited = Limited {
+        small: 321,
+        big: DynSized(LimitedInner {
+            // this is 2 * 4 == 8 bytes long, which is under limit 16
+            one: vec![0x12345; 2],
+            two: Box::new([0; 1]),
+        }),
+    };
+    let bytes = limited.emit(vec![]);
+    let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
+    if let nom::Err::Error(err) = &err {
+        if let ParseErrorKind::Limit(_, hint) = &err.kind {
+            if *hint == stringify!(LimitOne) {
+                return;
+            }
+        }
+    }
+    panic!("wrong error {err}");
+}
+
+#[test]
+fn test_limits_fail_3() {
+    let limited = Limited {
+        small: 321,
+        big: DynSized(LimitedInner {
+            one: vec![0x12345; 4],
+            // this is 5 * 2 == 10 bytes long, which is over limit 8
+            two: Box::new([0; 5]),
+        }),
+    };
+    let bytes = limited.emit(vec![]);
+    let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
+    if let nom::Err::Error(err) = &err {
+        if let ParseErrorKind::Limit(_, hint) = &err.kind {
+            if *hint == stringify!(LimitTwo) {
+                return;
+            }
+        }
+    }
+    panic!("wrong error {err}");
 }
