@@ -1,6 +1,8 @@
 // Copyright 2022 Vladislav Melnik
 // SPDX-License-Identifier: MIT
 
+use alloc::{string::String, boxed::Box, vec::Vec};
+
 use super::{
     core::{RadiationBuffer, Emit},
     DynSized, Collection,

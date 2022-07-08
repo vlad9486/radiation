@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 use core::str;
+use alloc::{string::{String, ToString}, boxed::Box, vec::Vec};
 
 use nom::{IResult, combinator, number, multi};
 

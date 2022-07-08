@@ -28,7 +28,7 @@ pub fn derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
             if as_str {
                 quote::quote! {
                     #acc
-                    buffer = #i.to_string().emit(buffer);
+                    buffer = alloc::string::ToString::to_string(#i).emit(buffer);
                 }
             } else if let Some(custom_emit) = custom_emit {
                 quote::quote! {

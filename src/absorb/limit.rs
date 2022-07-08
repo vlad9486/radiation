@@ -1,15 +1,27 @@
 // Copyright 2022 Vladislav Melnik
 // SPDX-License-Identifier: MIT
 
-use thiserror::Error;
+use core::fmt;
 
-#[derive(Debug, Error)]
-#[error("{description} limit exceed {actual} > {maximum}")]
+#[derive(Debug)]
 pub struct LimitError {
     description: &'static str,
     minimum: usize,
     maximum: usize,
     actual: usize,
+}
+
+impl fmt::Display for LimitError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let LimitError { description, minimum, maximum, actual } = self;
+        if *actual > *maximum {
+            write!(f, "{description} falls outside the allowed maximum {actual} > {maximum}")
+        } else if *actual < *minimum {
+            write!(f, "{description} falls below the allowed minimum {actual} < {minimum}")
+        } else {
+            Ok(())
+        }
+    }
 }
 
 pub trait Limit {

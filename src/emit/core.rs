@@ -1,6 +1,8 @@
 // Copyright 2022 Vladislav Melnik
 // SPDX-License-Identifier: MIT
 
+use alloc::vec::Vec;
+
 pub trait RadiationBuffer {
     fn pos(&self) -> usize;
     fn write_at(&mut self, pos: usize, data: &[u8]);

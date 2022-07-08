@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 use core::marker::PhantomData;
+use alloc::boxed::Box;
 
 use super::core::Emit;
 

@@ -2,25 +2,32 @@
 // SPDX-License-Identifier: MIT
 
 use core::fmt;
+use alloc::{string::{String, ToString}, boxed::Box, vec::Vec};
 
 use nom::{
     error::{ParseError as NomParseError, ErrorKind as NomErrorKind, FromExternalError},
     Err,
 };
-use thiserror::Error;
 
 use super::limit::LimitError;
 
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum ParseErrorKind {
-    #[error("{_0:?}")]
     Nom(NomErrorKind),
-    #[error("{_0}")]
     Limit(LimitError),
-    #[error("unknown tag: {tag}, enum: {hint}")]
     UnknownTag { tag: String, hint: &'static str },
-    #[error("{_0:?}, custom: {_1}")]
     Custom(NomErrorKind, String),
+}
+
+impl fmt::Display for ParseErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseErrorKind::Nom(err) => write!(f, "{err:?}"),
+            ParseErrorKind::Limit(err) => write!(f, "{err}"),
+            ParseErrorKind::UnknownTag { tag, hint } => write!(f, "unknown tag: {tag}, {hint}"),
+            ParseErrorKind::Custom(err, custom) => write!(f, "{err:?}, custom: {custom}"),
+        }
+    }
 }
 
 impl ParseErrorKind {
@@ -43,7 +50,6 @@ impl ParseErrorKind {
     }
 }
 
-#[derive(Error)]
 pub struct ParseError<I> {
     pub input: I,
     pub kind: ParseErrorKind,

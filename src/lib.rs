@@ -4,6 +4,10 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::all)]
 #![cfg_attr(feature = "nightly", feature(min_specialization))]
+#![no_std]
+
+#[macro_use]
+extern crate alloc;
 
 extern crate self as radiation;
 
