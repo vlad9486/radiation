@@ -4,7 +4,7 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::all)]
 #![cfg_attr(feature = "nightly", feature(min_specialization))]
-#![no_std]
+#![cfg_attr(not(feature = "codec"), no_std)]
 
 #[macro_use]
 extern crate alloc;
@@ -32,3 +32,6 @@ pub struct DynSized<T>(pub T);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Collection<C>(pub C);
+
+#[cfg(feature = "codec")]
+pub mod codec;

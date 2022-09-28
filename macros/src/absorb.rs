@@ -23,7 +23,7 @@ pub fn derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
                 .expect("trivial code")
         });
         let parser = match variant.bindings().len() {
-            0 => quote::quote! { #se::nom::combinator::success(ctor) },
+            0 => quote::quote! { #se::nom::combinator::success(#ctor) },
             len => {
                 let mut p = quote::quote!();
                 let mut limit_next = quote::quote!(L);

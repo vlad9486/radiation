@@ -1,6 +1,6 @@
 [package]
 name = "radiation-macros"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2021"
 authors = ["Vladislav Melnik <vladislav.melnik@protonmail.com>"]
 rust-version = "1.58.1"

@@ -3,23 +3,29 @@ members = [".", "macros"]
 
 [package]
 name = "radiation"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2021"
 authors = ["Vladislav Melnik <vladislav.melnik@protonmail.com>"]
 rust-version = "1.58.1"
 license = "MIT"
 description = "Convert Rust type into raw bytes and vice versa"
+readme = "README.md"
 repository = "https://github.com/vlad9486/radiation.git"
 keywords = ["binary", "encode", "decode"]
 categories = ["rust-patterns", "encoding", "no-std"]
+resolver = "2"
 
 [dependencies]
 nom = { version = "7.1" }
 hex = { version = "0.4.3" }
 
-radiation-macros = { path = "macros", version = "=0.2.0", optional = true }
+tokio-util = { version = "0.7.4", features = ["codec"], optional = true }
+bytes = { version = "1.2", optional = true }
+
+radiation-macros = { path = "macros", version = "=0.2.2", optional = true }
 
 [features]
 default = ["derive"]
 derive = ["radiation-macros"]
 nightly = []
+codec = ["tokio-util/codec", "bytes"]

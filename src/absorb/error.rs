@@ -52,6 +52,10 @@ impl ParseErrorKind {
             subsequent: None,
         })
     }
+
+    pub fn is_eof(&self) -> bool {
+        matches!(self, ParseErrorKind::Nom(nom::error::ErrorKind::Eof))
+    }
 }
 
 pub struct ParseError<I> {
