@@ -15,7 +15,7 @@ struct SomeStruct {
 #[test]
 fn trivial_struct() {
     let foo = SomeStruct::absorb_ext(b"\x12\x23\x34\x45\x56\x67\x78").unwrap();
-    assert_eq!(foo.emit(vec![]), b"\x12\x23\x34\x45\x56\x67\x78");
+    assert_eq!(foo.chain(vec![]), b"\x12\x23\x34\x45\x56\x67\x78");
     assert_eq!(
         foo,
         SomeStruct {
@@ -48,18 +48,18 @@ fn absorb<'pa>(input: &'pa [u8]) -> nom::IResult<&'pa [u8], u16, ParseError<&'pa
     crate::nom::combinator::map(u8::absorb::<()>, |a| a as u16 * a as u16)(input)
 }
 
-fn emit<W>(value: &u16, buffer: W) -> W
+fn emit<W>(value: &u16, buffer: &mut W)
 where
-    W: Extend<u8>,
+    W: for<'a> Extend<&'a u8>,
 {
     let a = (*value as f32).sqrt() as u8;
-    a.emit(buffer)
+    a.emit(buffer);
 }
 
 #[test]
 fn trivial_enum() {
     let a = SomeEnum::absorb_ext(b"\x01\xcc\xdd\x12").unwrap();
-    assert_eq!(a.emit(vec![]), b"\x01\xcc\xdd\x12");
+    assert_eq!(a.chain(vec![]), b"\x01\xcc\xdd\x12");
     assert_eq!(
         a,
         SomeEnum::A {
@@ -70,11 +70,11 @@ fn trivial_enum() {
     );
 
     let b = SomeEnum::absorb_ext(b"\x02\x00\x00\x00\x0512345").unwrap();
-    assert_eq!(b.emit(vec![]), b"\x02\x00\x00\x00\x0512345");
+    assert_eq!(b.chain(vec![]), b"\x02\x00\x00\x00\x0512345");
     assert_eq!(b, SomeEnum::B(12345));
 
     let c = SomeEnum::absorb_ext(b"\x03\x12\x34\xab\xcd").unwrap();
-    assert_eq!(c.emit(vec![]), b"\x03\x12\x34\xab\xcd");
+    assert_eq!(c.chain(vec![]), b"\x03\x12\x34\xab\xcd");
     assert_eq!(c, SomeEnum::C(0x1234abcd));
 
     let err = SomeEnum::absorb_ext(b"\x04").unwrap_err();
@@ -128,7 +128,7 @@ fn test_limits_fail_0() {
             two: Box::new([0; 5]),
         }),
     };
-    let bytes = limited.emit(vec![]);
+    let bytes = limited.chain(vec![]);
     let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
     if let nom::Err::Error(err) = &err {
         if let ParseErrorKind::Limit(_, hint) = &err.kind {
@@ -150,7 +150,7 @@ fn test_limits_fail_1() {
             two: Box::new([0; 1]),
         }),
     };
-    let bytes = limited.emit(vec![]);
+    let bytes = limited.chain(vec![]);
     let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
     if let nom::Err::Error(err) = &err {
         if let ParseErrorKind::Limit(_, hint) = &err.kind {
@@ -172,7 +172,7 @@ fn test_limits_fail_2() {
             two: Box::new([0; 1]),
         }),
     };
-    let bytes = limited.emit(vec![]);
+    let bytes = limited.chain(vec![]);
     let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
     if let nom::Err::Error(err) = &err {
         if let ParseErrorKind::Limit(_, hint) = &err.kind {
@@ -194,7 +194,7 @@ fn test_limits_fail_3() {
             two: Box::new([0; 5]),
         }),
     };
-    let bytes = limited.emit(vec![]);
+    let bytes = limited.chain(vec![]);
     let err = <Limited as AbsorbExt>::absorb_ext(&bytes).unwrap_err();
     if let nom::Err::Error(err) = &err {
         if let ParseErrorKind::Limit(_, hint) = &err.kind {

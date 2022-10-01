@@ -17,7 +17,7 @@ pub fn derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
             Err(err) => return err.to_compile_error(),
         };
 
-        let init = quote::quote! { buffer = #tag_ty::emit(&(#tag_val), buffer); };
+        let init = quote::quote! { #tag_ty::emit(&(#tag_val), buffer); };
         body.extend(variant.fold(init, |acc, binding| {
             let ast = &binding.ast();
             let as_str = find_attr(&ast.attrs, "as_str").is_some();
@@ -28,17 +28,17 @@ pub fn derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
             if as_str {
                 quote::quote! {
                     #acc
-                    buffer = alloc::string::ToString::to_string(#i).emit(buffer);
+                    alloc::string::ToString::to_string(#i).emit(buffer);
                 }
             } else if let Some(custom_emit) = custom_emit {
                 quote::quote! {
                     #acc
-                    buffer = #custom_emit(#i, buffer);
+                    #custom_emit(#i, buffer);
                 }
             } else {
                 quote::quote! {
                     #acc
-                    buffer = #i.emit(buffer);
+                    #i.emit(buffer);
                 }
             }
         }))
@@ -47,13 +47,12 @@ pub fn derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
     let gen_impl = quote! {
         gen impl<W> #se::Emit<W> for @Self
         where
-            W: Extend<u8> + #se::RadiationBuffer,
+            W: for<'a> Extend<&'a u8> + #se::RadiationBuffer,
         {
-            fn emit(&self, mut buffer: W) -> W {
+            fn emit(&self, buffer: &mut W) {
                 match self {
                     #body
                 }
-                buffer
             }
         }
 

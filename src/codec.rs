@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 use std::io;
 
 use tokio_util::codec::{Encoder, Decoder};
-use bytes::{BytesMut, BufMut};
+use bytes::BytesMut;
 
 use super::{Absorb, ParseError, Emit};
 
@@ -39,13 +39,12 @@ where
 
 impl<T> Encoder<T> for Codec<T>
 where
-    T: Emit<Vec<u8>>,
+    T: Emit<BytesMut>,
 {
     type Error = io::Error;
 
     fn encode(&mut self, item: T, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        let buffer = item.emit(vec![]);
-        dst.put_slice(&buffer);
+        item.emit(dst);
 
         Ok(())
     }

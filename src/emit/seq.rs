@@ -10,75 +10,124 @@ use super::{
 
 impl<W> Emit<W> for usize
 where
-    W: Extend<u8>,
+    W: for<'a> Extend<&'a u8>,
 {
-    fn emit(&self, buffer: W) -> W {
-        (*self as u32).emit(buffer)
+    fn emit(&self, buffer: &mut W) {
+        (*self as u32).emit(buffer);
     }
 }
 
 impl<W> Emit<W> for str
 where
-    W: Extend<u8>,
+    W: for<'a> Extend<&'a u8>,
 {
-    fn emit(&self, buffer: W) -> W {
+    fn emit(&self, buffer: &mut W) {
         let bytes = self.as_bytes();
-        let mut buffer = bytes.len().emit(buffer);
-        buffer.extend(bytes.iter().copied());
-        buffer
+        bytes.len().emit(buffer);
+        buffer.extend(bytes);
     }
 }
 
 impl<W> Emit<W> for String
 where
-    W: Extend<u8>,
+    W: for<'a> Extend<&'a u8>,
 {
-    fn emit(&self, buffer: W) -> W {
-        (**self).emit(buffer)
+    fn emit(&self, buffer: &mut W) {
+        (**self).emit(buffer);
     }
 }
 
 impl<T, W> Emit<W> for DynSized<T>
 where
     T: Emit<W>,
-    W: Extend<u8> + RadiationBuffer,
+    W: for<'a> Extend<&'a u8> + RadiationBuffer,
 {
-    fn emit(&self, buffer: W) -> W {
+    fn emit(&self, buffer: &mut W) {
         let pos = buffer.pos();
-        let mut buffer = self.0.emit(0usize.emit(buffer));
+        0usize.emit(buffer);
+        self.0.emit(buffer);
         let len = buffer.pos() - pos - 4;
         buffer.write_at(pos, &(len as u32).to_be_bytes());
-        buffer
     }
 }
 
+#[cfg(not(feature = "nightly"))]
 impl<T, W> Emit<W> for Box<[T]>
 where
     T: Emit<W>,
-    W: Extend<u8> + RadiationBuffer,
+    W: for<'a> Extend<&'a u8>,
 {
-    fn emit(&self, mut buffer: W) -> W {
+    fn emit(&self, buffer: &mut W) {
         for i in self.iter() {
-            buffer = i.emit(buffer);
+            i.emit(buffer);
         }
-        buffer
     }
 }
 
+#[cfg(feature = "nightly")]
+impl<T, W> Emit<W> for Box<[T]>
+where
+    T: Emit<W>,
+    W: for<'a> Extend<&'a u8>,
+{
+    default fn emit(&self, buffer: &mut W) {
+        for i in self.iter() {
+            i.emit(buffer);
+        }
+    }
+}
+
+// TODO: proper specialization
+#[cfg(feature = "nightly")]
+impl Emit<Vec<u8>> for Box<[u8]> {
+    fn emit(&self, buffer: &mut Vec<u8>) {
+        buffer.extend_from_slice(self);
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
 impl<T, W> Emit<W> for Vec<T>
 where
     T: Emit<W>,
-    W: Extend<u8> + RadiationBuffer,
+    W: for<'a> Extend<&'a u8> + RadiationBuffer,
 {
-    fn emit(&self, mut buffer: W) -> W {
+    fn emit(&self, buffer: &mut W) {
         let pos = buffer.pos();
-        buffer = 0usize.emit(buffer);
+        0usize.emit(buffer);
         for v in self {
-            buffer = v.emit(buffer);
+            v.emit(buffer);
         }
         let len = buffer.pos() - pos - 4;
         buffer.write_at(pos, &(len as u32).to_be_bytes());
-        buffer
+    }
+}
+
+#[cfg(feature = "nightly")]
+impl<T, W> Emit<W> for Vec<T>
+where
+    T: Emit<W>,
+    W: for<'a> Extend<&'a u8> + RadiationBuffer,
+{
+    default fn emit(&self, buffer: &mut W) {
+        let pos = buffer.pos();
+        0usize.emit(buffer);
+        for v in self {
+            v.emit(buffer);
+        }
+        let len = buffer.pos() - pos - 4;
+        buffer.write_at(pos, &(len as u32).to_be_bytes());
+    }
+}
+
+// TODO: proper specialization
+#[cfg(feature = "nightly")]
+impl Emit<Vec<u8>> for Vec<u8> {
+    fn emit(&self, buffer: &mut Vec<u8>) {
+        let pos = buffer.pos();
+        0usize.emit(buffer);
+        buffer.extend_from_slice(self);
+        let len = buffer.pos() - pos - 4;
+        buffer.write_at(pos, &(len as u32).to_be_bytes());
     }
 }
 
@@ -86,12 +135,11 @@ impl<C, W> Emit<W> for Collection<C>
 where
     C: IntoIterator + Clone,
     C::Item: Emit<W>,
-    W: Extend<u8> + RadiationBuffer,
+    W: for<'a> Extend<&'a u8> + RadiationBuffer,
 {
-    fn emit(&self, mut buffer: W) -> W {
+    fn emit(&self, buffer: &mut W) {
         for v in C::clone(&self.0) {
-            buffer = v.emit(buffer);
+            v.emit(buffer);
         }
-        buffer
     }
 }
