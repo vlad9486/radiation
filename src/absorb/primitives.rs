@@ -152,6 +152,17 @@ impl<'pa, const S: usize> Absorb<'pa> for [u8; S] {
     }
 }
 
+impl<'pa, const S: usize> Absorb<'pa> for &'pa [u8; S] {
+    fn absorb<L>(input: &'pa [u8]) -> IResult<&'pa [u8], Self, ParseError<&'pa [u8]>>
+    where
+        L: Limit,
+    {
+        combinator::map(complete::take(S), |input| {
+            <&'pa [u8; S]>::try_from(input).expect("impossible to fail here")
+        })(input)
+    }
+}
+
 impl<'pa, T> Absorb<'pa> for Option<T>
 where
     T: Absorb<'pa> + Clone,
