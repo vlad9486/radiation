@@ -4,7 +4,17 @@ use std::io;
 use tokio_util::codec::{Encoder, Decoder};
 use bytes::BytesMut;
 
-use super::{Absorb, ParseError, Emit};
+use super::{Absorb, ParseError, Emit, RadiationBuffer};
+
+impl RadiationBuffer for BytesMut {
+    fn pos(&self) -> usize {
+        self.len()
+    }
+
+    fn write_at(&mut self, pos: usize, data: &[u8]) {
+        self.as_mut()[pos..(pos + data.len())].clone_from_slice(data);
+    }
+}
 
 pub struct Codec<T>(PhantomData<T>);
 

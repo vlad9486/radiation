@@ -3,7 +3,7 @@ members = [".", "macros"]
 
 [package]
 name = "radiation"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 authors = ["Vladislav Melnik <vladislav.melnik@protonmail.com>"]
 rust-version = "1.58.1"
