@@ -16,6 +16,7 @@ impl RadiationBuffer for BytesMut {
     }
 }
 
+#[derive(Clone)]
 pub struct Codec<T>(PhantomData<T>);
 
 impl<T> Default for Codec<T> {
