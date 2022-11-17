@@ -27,10 +27,10 @@ pub use self::emit::{RadiationBuffer, Emit};
 #[cfg(all(test, feature = "derive"))]
 mod tests;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct DynSized<T>(pub T);
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Collection<C>(pub C);
 
 #[cfg(feature = "codec")]
