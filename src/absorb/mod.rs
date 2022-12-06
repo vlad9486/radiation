@@ -14,4 +14,6 @@ pub use self::core::{Absorb, AbsorbExt};
 
 mod primitives;
 
+mod atomics;
+
 mod seq;

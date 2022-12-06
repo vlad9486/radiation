@@ -8,4 +8,6 @@ pub use self::core::{RadiationBuffer, Emit};
 
 mod primitives;
 
+mod atomics;
+
 mod seq;
