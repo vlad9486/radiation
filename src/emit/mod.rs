@@ -11,3 +11,7 @@ mod primitives;
 mod atomics;
 
 mod seq;
+
+/// implementations for some standard types
+#[cfg(feature = "std")]
+mod types;

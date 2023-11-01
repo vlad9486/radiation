@@ -4,7 +4,7 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::all)]
 #![cfg_attr(feature = "nightly", feature(min_specialization))]
-#![cfg_attr(not(feature = "codec"), no_std)]
+#![cfg_attr(not(any(feature = "codec", feature = "std")), no_std)]
 
 #[macro_use]
 extern crate alloc;
