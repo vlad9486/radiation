@@ -8,7 +8,7 @@
 extern crate synstructure;
 
 fn find_attr(attrs: &[syn::Attribute], name: &str) -> Option<syn::Attribute> {
-    attrs.iter().find(|a| a.path.is_ident(name)).cloned()
+    attrs.iter().find(|a| a.path().is_ident(name)).cloned()
 }
 
 macro_rules! extract_attr {
