@@ -35,3 +35,6 @@ pub struct Collection<C>(pub C);
 
 #[cfg(feature = "codec")]
 pub mod codec;
+
+#[cfg(feature = "dilithium")]
+mod dil;
